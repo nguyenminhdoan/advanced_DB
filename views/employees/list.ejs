@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | HR Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-users"></i> HR Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees"><i class="fas fa-user-tie"></i> Employees</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/departments"><i class="fas fa-building"></i> Departments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/leaves"><i class="fas fa-calendar-alt"></i> Leave Requests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/performance"><i class="fas fa-chart-line"></i> Performance</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-alt"></i> Reports
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/performance/top-performers">Top Performers</a></li>
+                            <li><a class="dropdown-item" href="/reports/audit">Audit Log</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <% if (typeof session !== 'undefined' && session.message) { %>
+            <div class="alert alert-<%= session.message.type === 'error' ? 'danger' : session.message.type %> alert-dismissible fade show">
+                <%= session.message.text %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% delete session.message; %>
+        <% } %>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2"><i class="fas fa-user-tie"></i> Employees</h1>
+                <p class="text-muted">Manage employee information and view details</p>
+            </div>
+            <a href="/employees/new" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Employee
+            </a>
+        </div>
+
+        <!-- Employees Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Employee Directory</h5>
+            </div>
+            <div class="card-body">
+                <% if (employees.length === 0) { %>
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No employees found</p>
+                        <a href="/employees/new" class="btn btn-primary">Add First Employee</a>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Position</th>
+                                    <th>Department</th>
+                                    <th>Supervisor</th>
+                                    <th>Hire Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% employees.forEach(emp => { %>
+                                    <tr>
+                                        <td><strong><%= emp.EMP_ID %></strong></td>
+                                        <td>
+                                            <a href="/employees/<%= emp.EMP_ID %>" class="text-decoration-none">
+                                                <%= emp.FNAME %> <%= emp.LNAME %>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:<%= emp.EMAIL %>" class="text-decoration-none">
+                                                <%= emp.EMAIL %>
+                                            </a>
+                                        </td>
+                                        <td><%= emp.PHONE || 'N/A' %></td>
+                                        <td><%= emp.POSITION_TITLE %></td>
+                                        <td><%= emp.DP_NAME %></td>
+                                        <td><%= emp.SUPERVISOR_NAME || 'None' %></td>
+                                        <td><%= new Date(emp.HIRE_DATE).toLocaleDateString() %></td>
+                                        <td>
+                                            <% if (emp.IS_ACTIVE === 'Y') { %>
+                                                <span class="badge bg-success">Active</span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="/employees/<%= emp.EMP_ID %>" class="btn btn-outline-primary btn-sm" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button class="btn btn-outline-secondary btn-sm" title="Edit" disabled>
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary -->
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Total: <%= employees.length %> employee(s) | 
+                            Active: <%= employees.filter(e => e.IS_ACTIVE === 'Y').length %> | 
+                            Inactive: <%= employees.filter(e => e.IS_ACTIVE === 'N').length %>
+                        </small>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Employee Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Department Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <% if (employees.length > 0) { %>
+                            <% 
+                            const deptCounts = {};
+                            employees.forEach(emp => {
+                                deptCounts[emp.DP_NAME] = (deptCounts[emp.DP_NAME] || 0) + 1;
+                            });
+                            %>
+                            <% Object.entries(deptCounts).forEach(([dept, count]) => { %>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><%= dept %></span>
+                                    <span class="badge bg-primary"><%= count %></span>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-muted mb-0">No data available</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-calendar-alt"></i> Recent Hires</h6>
+                    </div>
+                    <div class="card-body">
+                        <% if (employees.length > 0) { %>
+                            <% 
+                            const recentHires = employees
+                                .sort((a, b) => new Date(b.HIRE_DATE) - new Date(a.HIRE_DATE))
+                                .slice(0, 5);
+                            %>
+                            <% recentHires.forEach(emp => { %>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><%= emp.FNAME %> <%= emp.LNAME %></span>
+                                    <small class="text-muted"><%= new Date(emp.HIRE_DATE).toLocaleDateString() %></small>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-muted mb-0">No recent hires</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">&copy; 2024 HR Management System - COMP214 Database Project</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/script.js"></script>
+</body>
+</html>

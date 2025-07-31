@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | HR Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-users"></i> HR Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/employees"><i class="fas fa-user-tie"></i> Employees</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/departments"><i class="fas fa-building"></i> Departments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/leaves"><i class="fas fa-calendar-alt"></i> Leave Requests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/performance"><i class="fas fa-chart-line"></i> Performance</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-alt"></i> Reports
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/performance/top-performers">Top Performers</a></li>
+                            <li><a class="dropdown-item" href="/reports/audit">Audit Log</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <% if (typeof session !== 'undefined' && session.message) { %>
+            <div class="alert alert-<%= session.message.type === 'error' ? 'danger' : session.message.type %> alert-dismissible fade show">
+                <%= session.message.text %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% delete session.message; %>
+        <% } %>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2"><i class="fas fa-chart-line"></i> Performance Reviews</h1>
+                <p class="text-muted">Employee performance evaluations and scores</p>
+            </div>
+            <div>
+                <a href="/performance/top-performers" class="btn btn-success">
+                    <i class="fas fa-trophy"></i> Top Performers
+                </a>
+            </div>
+        </div>
+
+        <!-- Performance Reviews Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> All Performance Reviews</h5>
+            </div>
+            <div class="card-body">
+                <% if (reviews.length === 0) { %>
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5>No Performance Reviews</h5>
+                        <p class="text-muted">No performance reviews have been conducted yet.</p>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Review ID</th>
+                                    <th>Employee</th>
+                                    <th>Review Date</th>
+                                    <th>Teamwork</th>
+                                    <th>Creativity</th>
+                                    <th>Knowledge</th>
+                                    <th>Overall Score</th>
+                                    <th>Reviewer</th>
+                                    <th>Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% reviews.forEach(review => { %>
+                                    <tr>
+                                        <td><strong><%= review.PERF_ID %></strong></td>
+                                        <td><%= review.EMPLOYEE_NAME %></td>
+                                        <td><%= new Date(review.REVIEW_DATE).toLocaleDateString() %></td>
+                                        <td>
+                                            <span class="badge bg-<%= review.TEAMWORK >= 8 ? 'success' : review.TEAMWORK >= 6 ? 'warning' : 'danger' %>">
+                                                <%= review.TEAMWORK %>/10
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<%= review.CREATIVITY >= 8 ? 'success' : review.CREATIVITY >= 6 ? 'warning' : 'danger' %>">
+                                                <%= review.CREATIVITY %>/10
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<%= review.KNOWLEDGE >= 8 ? 'success' : review.KNOWLEDGE >= 6 ? 'warning' : 'danger' %>">
+                                                <%= review.KNOWLEDGE %>/10
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-<%= review.OVERALL_SCORE >= 8 ? 'success' : review.OVERALL_SCORE >= 6 ? 'warning' : 'danger' %> me-2">
+                                                    <%= review.OVERALL_SCORE %>/10
+                                                </span>
+                                                <small class="text-muted">(Auto-calculated)</small>
+                                            </div>
+                                        </td>
+                                        <td><%= review.REVIEWER_NAME || 'N/A' %></td>
+                                        <td>
+                                            <% if (review.COMMENTS && review.COMMENTS.length > 40) { %>
+                                                <span title="<%= review.COMMENTS %>">
+                                                    <%= review.COMMENTS.substring(0, 40) %>...
+                                                </span>
+                                            <% } else { %>
+                                                <%= review.COMMENTS || 'No comments' %>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Performance Statistics -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h4 class="mb-1 text-primary"><%= reviews.length %></h4>
+                                    <small class="text-muted">Total Reviews</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <% 
+                                    const avgOverall = reviews.length > 0 ? 
+                                        (reviews.reduce((sum, r) => sum + r.OVERALL_SCORE, 0) / reviews.length).toFixed(1) : 0;
+                                    %>
+                                    <h4 class="mb-1 text-success"><%= avgOverall %>/10</h4>
+                                    <small class="text-muted">Average Score</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <% const highPerformers = reviews.filter(r => r.OVERALL_SCORE >= 8).length; %>
+                                    <h4 class="mb-1 text-warning"><%= highPerformers %></h4>
+                                    <small class="text-muted">High Performers (8+)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <% const needsImprovement = reviews.filter(r => r.OVERALL_SCORE < 6).length; %>
+                                    <h4 class="mb-1 text-danger"><%= needsImprovement %></h4>
+                                    <small class="text-muted">Needs Improvement (<6)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Database Trigger Information -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-database"></i> Automatic Score Calculation</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6><i class="fas fa-bolt text-warning"></i> Trigger: trg_calculate_overall_score</h6>
+                                <p class="small text-muted mb-2">
+                                    The overall score is automatically calculated using a database trigger that fires 
+                                    before INSERT or UPDATE operations on the performance_review table. The trigger 
+                                    calculates the average of teamwork, creativity, and knowledge scores, rounded to 1 decimal place.
+                                </p>
+                                <code class="small">:NEW.overall_score := ROUND((:NEW.teamwork + :NEW.creativity + :NEW.knowledge) / 3, 1);</code>
+                            </div>
+                            <div class="col-md-4">
+                                <h6><i class="fas fa-check-circle text-success"></i> Benefits</h6>
+                                <ul class="small mb-0">
+                                    <li>Consistent calculation method</li>
+                                    <li>Automatic updates on score changes</li>
+                                    <li>No manual calculation errors</li>
+                                    <li>Database-level enforcement</li>
+                                    <li>Real-time score updates</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">&copy; 2024 HR Management System - COMP214 Database Project</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/script.js"></script>
+</body>
+</html>

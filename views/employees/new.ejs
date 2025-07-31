@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | HR Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-users"></i> HR Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees"><i class="fas fa-user-tie"></i> Employees</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/departments"><i class="fas fa-building"></i> Departments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/leaves"><i class="fas fa-calendar-alt"></i> Leave Requests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/performance"><i class="fas fa-chart-line"></i> Performance</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-alt"></i> Reports
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/performance/top-performers">Top Performers</a></li>
+                            <li><a class="dropdown-item" href="/reports/audit">Audit Log</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <% if (typeof session !== 'undefined' && session.message) { %>
+            <div class="alert alert-<%= session.message.type === 'error' ? 'danger' : session.message.type %> alert-dismissible fade show">
+                <%= session.message.text %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% delete session.message; %>
+        <% } %>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2"><i class="fas fa-user-plus"></i> Add New Employee</h1>
+                <p class="text-muted">Create a new employee record using PL/SQL procedure</p>
+            </div>
+            <a href="/employees" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Employees
+            </a>
+        </div>
+
+        <!-- Add Employee Form -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user-edit"></i> Employee Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/employees" method="POST">
+                            <div class="row">
+                                <!-- First Name -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="fname" class="form-label">First Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="fname" name="fname" required maxlength="50"
+                                           placeholder="Enter first name">
+                                </div>
+                                
+                                <!-- Last Name -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="lname" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="lname" name="lname" required maxlength="50"
+                                           placeholder="Enter last name">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Email -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" required maxlength="100"
+                                           placeholder="Enter email address">
+                                    <div class="form-text">Must be a valid email format (e.g., user@company.com)</div>
+                                </div>
+                                
+                                <!-- Phone -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" maxlength="15"
+                                           placeholder="Enter phone number">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Position -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="position_id" class="form-label">Position <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="position_id" name="position_id" required>
+                                        <option value="">Select a position...</option>
+                                        <% positions.forEach(pos => { %>
+                                            <option value="<%= pos.POSITION_ID %>">
+                                                <%= pos.POSITION_TITLE %> - <%= pos.DP_NAME %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                
+                                <!-- Supervisor -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="supervisor_id" class="form-label">Supervisor</label>
+                                    <select class="form-select" id="supervisor_id" name="supervisor_id">
+                                        <option value="">No supervisor</option>
+                                        <% supervisors.forEach(sup => { %>
+                                            <option value="<%= sup.EMP_ID %>">
+                                                <%= sup.FULL_NAME %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                    <div class="form-text">Optional - select a supervisor for this employee</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="/employees" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Add Employee
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Information Panel -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>PL/SQL Integration:</strong></p>
+                        <ul class="small">
+                            <li>Uses <code>add_employee</code> procedure</li>
+                            <li>Validates position exists</li>
+                            <li>Validates supervisor (if provided)</li>
+                            <li>Auto-generates employee ID using sequence</li>
+                            <li>Includes exception handling</li>
+                        </ul>
+                        
+                        <hr>
+                        
+                        <p><strong>Validation Rules:</strong></p>
+                        <ul class="small">
+                            <li>Email must be unique and valid format</li>
+                            <li>Position must exist in system</li>
+                            <li>Supervisor must be active employee</li>
+                            <li>Hire date defaults to current date</li>
+                            <li>Employee is active by default</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Available Positions -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-briefcase"></i> Available Positions</h6>
+                    </div>
+                    <div class="card-body">
+                        <% if (positions.length === 0) { %>
+                            <p class="text-muted small mb-0">No positions available</p>
+                        <% } else { %>
+                            <% 
+                            const positionsByDept = {};
+                            positions.forEach(pos => {
+                                if (!positionsByDept[pos.DP_NAME]) {
+                                    positionsByDept[pos.DP_NAME] = [];
+                                }
+                                positionsByDept[pos.DP_NAME].push(pos.POSITION_TITLE);
+                            });
+                            %>
+                            <% Object.entries(positionsByDept).forEach(([dept, posList]) => { %>
+                                <div class="mb-2">
+                                    <strong class="small text-primary"><%= dept %></strong>
+                                    <ul class="small mb-0 ms-3">
+                                        <% posList.forEach(pos => { %>
+                                            <li><%= pos %></li>
+                                        <% }); %>
+                                    </ul>
+                                </div>
+                            <% }); %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">&copy; 2024 HR Management System - COMP214 Database Project</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/script.js"></script>
+</body>
+</html>

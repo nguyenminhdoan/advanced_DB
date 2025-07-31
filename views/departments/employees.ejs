@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | HR Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-users"></i> HR Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/employees"><i class="fas fa-user-tie"></i> Employees</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/departments"><i class="fas fa-building"></i> Departments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/leaves"><i class="fas fa-calendar-alt"></i> Leave Requests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/performance"><i class="fas fa-chart-line"></i> Performance</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-alt"></i> Reports
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/performance/top-performers">Top Performers</a></li>
+                            <li><a class="dropdown-item" href="/reports/audit">Audit Log</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <% if (typeof session !== 'undefined' && session.message) { %>
+            <div class="alert alert-<%= session.message.type === 'error' ? 'danger' : session.message.type %> alert-dismissible fade show">
+                <%= session.message.text %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% delete session.message; %>
+        <% } %>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2">
+                    <i class="fas fa-building"></i> <%= department.DP_NAME %> - Employees
+                </h1>
+                <p class="text-muted">Department staff directory</p>
+            </div>
+            <div>
+                <a href="/departments" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Departments
+                </a>
+            </div>
+        </div>
+
+        <!-- Department Employees -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users"></i> Department Staff
+                    <span class="badge bg-primary ms-2"><%= employees.length %></span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (employees.length === 0) { %>
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No Employees Found</h5>
+                        <p class="text-muted">This department currently has no active employees.</p>
+                        <a href="/employees/new" class="btn btn-primary">Add Employee</a>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Salary</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% employees.forEach(emp => { %>
+                                    <tr>
+                                        <td><strong><%= emp.EMP_ID %></strong></td>
+                                        <td>
+                                            <a href="/employees/<%= emp.EMP_ID %>" class="text-decoration-none">
+                                                <%= emp.FULL_NAME %>
+                                            </a>
+                                        </td>
+                                        <td><%= emp.POSITION_TITLE %></td>
+                                        <td class="text-success">
+                                            <strong>$<%= emp.SALARY.toLocaleString() %></strong>
+                                        </td>
+                                        <td>
+                                            <a href="/employees/<%= emp.EMP_ID %>" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Department Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h4 class="mb-1 text-primary"><%= employees.length %></h4>
+                                    <small class="text-muted">Total Employees</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <% 
+                                    const totalSalary = employees.reduce((sum, emp) => sum + emp.SALARY, 0);
+                                    const avgSalary = employees.length > 0 ? totalSalary / employees.length : 0;
+                                    %>
+                                    <h4 class="mb-1 text-success">$<%= avgSalary.toLocaleString() %></h4>
+                                    <small class="text-muted">Average Salary</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h4 class="mb-1 text-info">$<%= totalSalary.toLocaleString() %></h4>
+                                    <small class="text-muted">Total Payroll</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Position Distribution -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Position Distribution</h6>
+                                </div>
+                                <div class="card-body">
+                                    <% 
+                                    const positionCounts = {};
+                                    employees.forEach(emp => {
+                                        positionCounts[emp.POSITION_TITLE] = (positionCounts[emp.POSITION_TITLE] || 0) + 1;
+                                    });
+                                    %>
+                                    <div class="row">
+                                        <% Object.entries(positionCounts).forEach(([position, count]) => { %>
+                                            <div class="col-md-6 mb-2">
+                                                <div class="d-flex justify-content-between">
+                                                    <span><%= position %></span>
+                                                    <span class="badge bg-primary"><%= count %></span>
+                                                </div>
+                                                <div class="progress mt-1" style="height: 6px;">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: <%= (count / employees.length) * 100 %>%">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">&copy; 2024 HR Management System - COMP214 Database Project</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/script.js"></script>
+</body>
+</html>
