@@ -124,7 +124,7 @@ app.post('/employees', async (req, res) => {
             p_supervisor_id: supervisor_id ? parseInt(supervisor_id) : null,
             p_emp_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
-
+        console.log(req.body)
         await db.executeProcedure('add_employee(:p_position_id, :p_fname, :p_lname, :p_email, :p_phone, :p_supervisor_id, :p_emp_id)', binds);
         
         req.session.message = { type: 'success', text: `Employee added successfully with ID: ${binds.p_emp_id}` };
@@ -268,6 +268,56 @@ app.get('/leaves', async (req, res) => {
     } catch (error) {
         console.error('Error fetching leave requests:', error);
         res.render('leaves/list', { title: 'Leave Requests', leaves: [] });
+    }
+});
+
+// Show leave application form
+app.get('/leaves/new', async (req, res) => {
+    try {
+        const employeesResult = await db.executeQuery(`
+            SELECT emp_id, fname || ' ' || lname as full_name
+            FROM employees
+            WHERE is_active = 'Y'
+            ORDER BY fname, lname
+        `);
+
+        res.render('leaves/new', { 
+            title: 'Apply for Leave', 
+            employees: employeesResult.rows
+        });
+    } catch (error) {
+        console.error('Error loading leave application form:', error);
+        res.render('leaves/new', { title: 'Apply for Leave', employees: [] });
+    }
+});
+
+// Submit leave request
+app.post('/leaves', async (req, res) => {
+    const { emp_id, start_date, end_date, reason } = req.body;
+    
+    try {
+        // Validate dates
+        const startDate = new Date(start_date);
+        const endDate = new Date(end_date);
+        
+        if (endDate < startDate) {
+            req.session.message = { type: 'error', text: 'End date cannot be before start date' };
+            return res.redirect('/leaves/new');
+        }
+
+        // Insert leave request
+        const result = await db.executeQuery(`
+            INSERT INTO leave_request (leave_id, emp_id, start_date, end_date, reason)
+            VALUES (leave_seq.NEXTVAL, :emp_id, TO_DATE(:start_date, 'YYYY-MM-DD'), 
+                    TO_DATE(:end_date, 'YYYY-MM-DD'), :reason)
+        `, [parseInt(emp_id), start_date, end_date, reason || null]);
+        
+        req.session.message = { type: 'success', text: 'Leave request submitted successfully' };
+        res.redirect('/leaves');
+    } catch (error) {
+        console.error('Error submitting leave request:', error);
+        req.session.message = { type: 'error', text: `Error submitting leave request: ${error.message}` };
+        res.redirect('/leaves/new');
     }
 });
 
